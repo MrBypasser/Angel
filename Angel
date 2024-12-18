@@ -1,0 +1,219 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+local userInputService = game:GetService("UserInputService")
+
+-- Update Hotbar Tool Names for All Abilities
+local playerGui = player:WaitForChild("PlayerGui")
+local hotbar = playerGui:FindFirstChild("Hotbar")
+local backpack = hotbar and hotbar:FindFirstChild("Backpack")
+local hotbarFrame = backpack and backpack:FindFirstChild("Hotbar")
+
+if hotbarFrame then
+    -- Slot 1 (Speedy Cut)
+    local slot1 = hotbarFrame:FindFirstChild("1")
+    if slot1 then
+        local baseButton = slot1:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Speedy Cut"
+            end
+        end
+    end
+
+    -- Slot 2 (Fast Kicker)
+    local slot2 = hotbarFrame:FindFirstChild("2")
+    if slot2 then
+        local baseButton = slot2:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Fast Kicker"
+            end
+        end
+    end
+
+    -- Slot 3 (Slice Up)
+    local slot3 = hotbarFrame:FindFirstChild("3")
+    if slot3 then
+        local baseButton = slot3:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Slice Up"
+            end
+        end
+    end
+
+    -- Slot 4 (Deadly Force)
+    local slot4 = hotbarFrame:FindFirstChild("4")
+    if slot4 then
+        local baseButton = slot4:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Deadly Force"
+            end
+        end
+    end
+end
+
+-- Speedy Cut Logic (Teleport to nearest player)
+local function speedyCut()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            local otherCharacter = otherPlayer.Character
+            local otherRootPart = otherCharacter:FindFirstChild("HumanoidRootPart")
+            if otherRootPart then
+                local distance = (rootPart.Position - otherRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = otherPlayer
+                end
+            end
+        end
+    end
+    if closestPlayer then
+        local targetCharacter = closestPlayer.Character
+        local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+        if targetRootPart then
+            local targetPosition = targetRootPart.Position
+            rootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 0, 5), targetPosition)
+        end
+    end
+end
+
+-- Fast Kicker Logic (Teleport around nearest player while facing them)
+local function fastKicker()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            local otherCharacter = otherPlayer.Character
+            local otherRootPart = otherCharacter:FindFirstChild("HumanoidRootPart")
+            if otherRootPart then
+                local distance = (rootPart.Position - otherRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = otherPlayer
+                end
+            end
+        end
+    end
+    if closestPlayer then
+        local targetCharacter = closestPlayer.Character
+        local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+        if targetRootPart then
+            local targetPosition = targetRootPart.Position
+            -- Disable shiftlock to face the target
+            game:GetService("UserInputService").MouseIconEnabled = false
+            rootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 0, 5), targetPosition)
+            task.wait(0.1)
+            rootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 0, -5), targetPosition)
+            game:GetService("UserInputService").MouseIconEnabled = true
+        end
+    end
+end
+
+-- Slice Up Logic (Teleport immediately to nearest player, then up and down for 2 seconds)
+local function sliceUp()
+    -- Teleport immediately to the nearest player
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            local otherCharacter = otherPlayer.Character
+            local otherRootPart = otherCharacter:FindFirstChild("HumanoidRootPart")
+            if otherRootPart then
+                local distance = (rootPart.Position - otherRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = otherPlayer
+                end
+            end
+        end
+    end
+    if closestPlayer then
+        local targetCharacter = closestPlayer.Character
+        local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+        if targetRootPart then
+            local targetPosition = targetRootPart.Position
+            rootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 0, 5), targetPosition)
+        end
+    end
+
+    -- Wait for 0.4 seconds before starting the movement
+    task.wait(0.4)
+
+    local startTime = tick()
+    local endTime = startTime + 2  -- Last for 2 seconds
+    local amplitude = 5  -- Lower height (less high)
+    local speed = 1  -- Slower speed of going up and down (slower than before)
+
+    -- Move up and down
+    while tick() < endTime do
+        local timeElapsed = tick() - startTime
+        -- Smooth up and down movement using sine wave
+        local yOffset = math.sin(timeElapsed * speed) * amplitude
+        rootPart.CFrame = rootPart.CFrame * CFrame.new(0, yOffset, 0)
+        task.wait(0.03)  -- Update the position every 0.03 seconds for smoothness
+    end
+end
+
+-- Deadly Force Logic (Teleports to nearest player and follows them for 1 second)
+local function deadlyForce()
+    -- Find the nearest player
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            local otherCharacter = otherPlayer.Character
+            local otherRootPart = otherCharacter:FindFirstChild("HumanoidRootPart")
+            if otherRootPart then
+                local distance = (rootPart.Position - otherRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = otherPlayer
+                end
+            end
+        end
+    end
+    if closestPlayer then
+        local targetCharacter = closestPlayer.Character
+        local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+        if targetRootPart then
+            -- Teleport to the target player's position
+            rootPart.CFrame = CFrame.new(targetRootPart.Position)
+
+            -- Follow the target for 1 second
+            local endTime = tick() + 1  -- Follow for 1 second
+            while tick() < endTime do
+                -- Continuously update position to follow the target
+                rootPart.CFrame = CFrame.new(targetRootPart.Position)
+                task.wait(0.1)  -- Update position every 0.1 seconds
+            end
+        end
+    end
+end
+
+-- Listen for key press to trigger abilities
+userInputService.InputBegan:Connect(function(input, isTyping)
+    if isTyping then return end
+    if input.KeyCode == Enum.KeyCode.One then
+        -- Trigger Speedy Cut when the player presses "1"
+        speedyCut()
+    elseif input.KeyCode == Enum.KeyCode.Two then
+        -- Trigger Fast Kicker when the player presses "2"
+        fastKicker()
+    elseif input.KeyCode == Enum.KeyCode.Three then
+        -- Trigger Slice Up (Up and Down) when the player presses "3"
+        sliceUp()
+    elseif input.KeyCode == Enum.KeyCode.Four then
+        -- Trigger Deadly Force when the player presses "4"
+        deadlyForce()
+    end
+end)
