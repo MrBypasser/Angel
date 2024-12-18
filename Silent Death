@@ -1,0 +1,197 @@
+-- Variables
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local userInputService = game:GetService("UserInputService")
+local playerGui = player:WaitForChild("PlayerGui")
+local hotbar = playerGui:FindFirstChild("Hotbar")
+local backpack = hotbar and hotbar:FindFirstChild("Backpack")
+local hotbarFrame = backpack and backpack:FindFirstChild("Hotbar")
+
+-- Set tool names
+if hotbarFrame then
+    -- First Ability: Sliced
+    local slot1 = hotbarFrame:FindFirstChild("1")
+    if slot1 then
+        local baseButton = slot1:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Sliced"
+            end
+        end
+    end
+
+    -- Second Ability: Player Teleporter
+    local slot2 = hotbarFrame:FindFirstChild("2")
+    if slot2 then
+        local baseButton = slot2:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Player Teleporter"
+            end
+        end
+    end
+
+    -- Third Ability: Teleport Behind
+    local slot3 = hotbarFrame:FindFirstChild("3")
+    if slot3 then
+        local baseButton = slot3:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Teleport Behind"
+            end
+        end
+    end
+
+    -- Fourth Ability: Invisible Trick
+    local slot4 = hotbarFrame:FindFirstChild("4")
+    if slot4 then
+        local baseButton = slot4:FindFirstChild("Base")
+        if baseButton then
+            local toolNameGui = baseButton:FindFirstChild("ToolName")
+            if toolNameGui then
+                toolNameGui.Text = "Invisible Trick"
+            end
+        end
+    end
+end
+
+-- First Ability: "Sliced"
+local function slicedAbility()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+
+    -- Find the nearest player
+    for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local otherRootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local distance = (humanoidRootPart.Position - otherRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestPlayer = otherPlayer
+            end
+        end
+    end
+
+    -- Teleport around the target
+    if closestPlayer then
+        local targetRootPart = closestPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if targetRootPart then
+            humanoidRootPart.CFrame = CFrame.new(targetRootPart.Position + Vector3.new(7, 0, 0), targetRootPart.Position)
+            local endTime = tick() + 1.5
+            while tick() < endTime do
+                local angle = math.random() * math.pi * 2
+                local offset = Vector3.new(math.cos(angle) * 7, 0, math.sin(angle) * 7)
+                humanoidRootPart.CFrame = CFrame.new(targetRootPart.Position + offset, targetRootPart.Position)
+                task.wait(0.2)
+            end
+        end
+    end
+end
+
+-- Second Ability: "Player Teleporter"
+local function playerTeleporterAbility()
+    task.wait(0.8) -- Initial wait before starting teleportation
+    local players = game.Players:GetPlayers()
+
+    for i = 1, 3 do -- Perform exactly 3 teleports
+        -- Filter out the local player
+        local otherPlayers = {}
+        for _, otherPlayer in ipairs(players) do
+            if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                table.insert(otherPlayers, otherPlayer)
+            end
+        end
+
+        -- Pick a random player and teleport
+        if #otherPlayers > 0 then
+            local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+            local targetRootPart = randomPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if targetRootPart then
+                humanoidRootPart.CFrame = CFrame.new(targetRootPart.Position)
+            end
+        end
+
+        -- Wait 0.8 seconds before the next teleport
+        task.wait(0.8)
+    end
+end
+
+-- Third Ability: "Teleport Behind"
+local function teleportBehindAbility()
+    local startTime = tick()
+    while tick() - startTime < 2 do -- For 2 seconds
+        local closestPlayer = nil
+        local shortestDistance = math.huge
+
+        -- Find the nearest player
+        for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local otherRootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local distance = (humanoidRootPart.Position - otherRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = otherPlayer
+                end
+            end
+        end
+
+        -- Teleport behind the target
+        if closestPlayer then
+            local targetRootPart = closestPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if targetRootPart then
+                local behindPosition = targetRootPart.CFrame * CFrame.new(0, 0, 3) -- 3 studs behind
+                humanoidRootPart.CFrame = CFrame.new(behindPosition.Position, targetRootPart.Position)
+            end
+        end
+
+        -- Wait 0.05 seconds before the next teleport
+        task.wait(0.05)
+    end
+end
+
+-- Fourth Ability: "Invisible Trick"
+local function invisibleTrickAbility()
+    local originalPosition = humanoidRootPart.Position
+    local players = game.Players:GetPlayers()
+    local startTime = tick()
+
+    while tick() - startTime < 2 do -- For 2 seconds
+        local otherPlayers = {}
+        for _, otherPlayer in ipairs(players) do
+            if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                table.insert(otherPlayers, otherPlayer)
+            end
+        end
+
+        -- Teleport randomly to other players
+        if #otherPlayers > 0 then
+            local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+            local targetRootPart = randomPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if targetRootPart then
+                humanoidRootPart.CFrame = CFrame.new(targetRootPart.Position)
+            end
+        end
+        task.wait(0.02) -- Delay between teleports
+    end
+
+    -- Teleport back to original position
+    humanoidRootPart.CFrame = CFrame.new(originalPosition)
+end
+
+-- Listen for key presses to trigger abilities
+userInputService.InputBegan:Connect(function(input, isTyping)
+    if isTyping then return end
+    if input.KeyCode == Enum.KeyCode.One then
+        slicedAbility()
+    elseif input.KeyCode == Enum.KeyCode.Two then
+        playerTeleporterAbility()
+    elseif input.KeyCode == Enum.KeyCode.Three then
+        teleportBehindAbility()
+    elseif input.KeyCode == Enum.KeyCode.Four then
+        invisibleTrickAbility()
+    end
+end)
